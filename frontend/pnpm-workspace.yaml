@@ -1,0 +1,4 @@
+packages:
+  - 'base-app'
+  - 'rms-app'
+  - 'packages/*'

@@ -1,0 +1,105 @@
+.ginger-layout {
+  min-height: 100vh;
+
+  .da-layout-aside-wrapper {
+    display: flex;
+    flex-direction: row;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+    background-color: #ffffff;
+    transition: all 0.2s ease-in-out;
+    border-right: 1px solid #f0f0f0;
+
+    &.da-layout-aside-fixed {
+      position: fixed;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      height: 100%;
+    }
+
+    &.da-sidebar-top {
+      z-index: 1000;
+    }
+
+    // 覆盖 Ant Design Menu 样式
+    .ant-menu {
+      border-inline-end: none !important;
+      background: transparent;
+
+      .ant-menu-item {
+        height: 50px;
+        line-height: 50px;
+        margin-block: 4px;
+        color: #595959;
+        font-size: 15px;
+        border-radius: 0 4px 4px 0;
+        margin-inline: 0 !important;
+        width: 100% !important;
+
+        &:hover {
+          color: #5c67f2 !important;
+          background-color: #f5f7ff;
+        }
+
+        &.ant-menu-item-selected {
+          background-color: #eef2ff !important; // 淡紫色背景
+          color: #1a1a1a !important;
+          font-weight: 600;
+
+          // 左侧紫色指示线
+          &::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background-color: #5c67f2;
+            border-radius: 0 2px 2px 0;
+          }
+        }
+
+        .ant-menu-item-icon {
+          font-size: 18px !important;
+        }
+      }
+    }
+  }
+
+  .da-layout-header-wrapper {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    box-shadow: 0 0 6px rgba(0, 0, 0, 0.04);
+    background-color: #ffffff;
+    transition: all 0.2s ease-in-out;
+
+    &.da-layout-header-fixed {
+      position: fixed;
+      top: 0;
+      right: 0;
+    }
+  }
+
+  .da-layout-content-wrapper {
+    background-color: #f0f2f5;
+    // padding: 24px;
+    flex: 1;
+  }
+
+  .da-layout-footer-wrapper {
+    padding: 24px 0 20px;
+    background-color: #f7f7f9;
+    text-align: center;
+  }
+}
+
+.ginger-layout-header,
+.ginger-layout-sec-header {
+  width: 100%;
+}
+
+.ginger-layout-sidebar,
+.ginger-layout-sec-sidebar {
+  height: 100%;
+}
