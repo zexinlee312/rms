@@ -1,3 +1,4 @@
+import '@ant-design/v5-patch-for-react-19';
 import React, { useEffect } from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
@@ -41,4 +42,3 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     </Routes>
   </BrowserRouter>,
 )
-

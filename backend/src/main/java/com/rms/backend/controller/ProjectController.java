@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/projects")
@@ -37,6 +38,21 @@ public class ProjectController {
         
         List<Project> projects = projectService.getProjectsByUserId(user.getId());
         return ResponseEntity.ok(projects);
+    }
+
+    @GetMapping("/{id}/members")
+    public ResponseEntity<List<User>> getProjectMembers(@PathVariable Long id) {
+        List<ProjectMember> members = projectMemberMapper.selectList(
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ProjectMember>().eq(ProjectMember::getProjectId, id)
+        );
+        
+        List<Long> userIds = members.stream().map(ProjectMember::getUserId).collect(Collectors.toList());
+        
+        if (userIds.isEmpty()) {
+            return ResponseEntity.ok(List.of());
+        }
+        
+        return ResponseEntity.ok(userService.listByIds(userIds));
     }
 
     @PostMapping

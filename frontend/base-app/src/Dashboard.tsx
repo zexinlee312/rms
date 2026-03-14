@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Card, List, Typography, Spin, message, Empty, Button, Modal, Form, Input } from 'antd';
 import { ProjectOutlined, PlusOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+import { http } from '@rms/api';
 
 const { Title, Paragraph } = Typography;
 
@@ -20,49 +21,41 @@ const Dashboard: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchProjects();
-  }, []);
-
   const fetchProjects = async () => {
     try {
-      const response = await fetch('/api/projects');
-      if (response.ok) {
-        const data = await response.json();
-        setProjects(data);
-      } else if (response.status === 401) {
+      setLoading(true);
+      const data = await http.get<Project[]>('/projects');
+      setProjects(data);
+    } catch (error: any) {
+      if (error.response?.status === 401) {
         navigate('/login');
+      } else {
+        message.error('加载项目列表失败');
       }
-    } catch (error) {
-      message.error('加载项目列表失败');
     } finally {
       setLoading(false);
     }
   };
 
+  useEffect(() => {
+    fetchProjects();
+  }, []);
+
   const handleProjectClick = (projectId: number) => {
     localStorage.setItem('current_project_id', projectId.toString());
-    navigate(`/rms?projectId=${projectId}`);
+    navigate(`/rms/${projectId}/backlog`);
   };
 
   const handleCreateProject = async (values: any) => {
     setSubmitting(true);
     try {
-      const response = await fetch('/api/projects', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
-      });
-      if (response.ok) {
-        message.success('项目创建成功');
-        setIsModalOpen(false);
-        form.resetFields();
-        fetchProjects(); // 刷新列表
-      } else {
-        message.error('项目创建失败');
-      }
+      await http.post('/projects', values);
+      message.success('项目创建成功');
+      setIsModalOpen(false);
+      form.resetFields();
+      fetchProjects();
     } catch (error) {
-      message.error('网络错误');
+      message.error('项目创建失败');
     } finally {
       setSubmitting(false);
     }
@@ -70,7 +63,7 @@ const Dashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
         <Spin size="large" tip="加载项目中..." />
       </div>
     );
@@ -132,33 +125,12 @@ const Dashboard: React.FC = () => {
         <Empty description="你还没有参与任何项目" />
       )}
 
-      <Modal
-        title="新建项目"
-        open={isModalOpen}
-        onOk={() => form.submit()}
-        onCancel={() => setIsModalOpen(false)}
-        confirmLoading={submitting}
-        okText="创建"
-        cancelText="取消"
-        destroyOnClose
-      >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleCreateProject}
-          style={{ marginTop: 24 }}
-        >
-          <Form.Item
-            name="name"
-            label="项目名称"
-            rules={[{ required: true, message: '请输入项目名称' }]}
-          >
+      <Modal title="新建项目" open={isModalOpen} onOk={() => form.submit()} onCancel={() => setIsModalOpen(false)} confirmLoading={submitting} okText="创建" cancelText="取消" destroyOnHidden>
+        <Form form={form} layout="vertical" onFinish={handleCreateProject} style={{ marginTop: 24 }}>
+          <Form.Item name="name" label="项目名称" rules={[{ required: true, message: '请输入项目名称' }]}>
             <Input placeholder="请输入项目名称" size="large" />
           </Form.Item>
-          <Form.Item
-            name="description"
-            label="项目描述"
-          >
+          <Form.Item name="description" label="项目描述">
             <Input.TextArea placeholder="请输入项目描述" rows={4} />
           </Form.Item>
         </Form>

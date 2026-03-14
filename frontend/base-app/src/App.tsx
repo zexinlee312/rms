@@ -26,7 +26,6 @@ import {
   GingerHeader,
   GingerSecHeader,
   GingerSidebar,
-  GingerFooter,
   DEFAULT_LAYOUT_CONFIG,
   COMMON_LAYOUT_CONFIG,
   GingerLayoutConfig,
@@ -57,20 +56,9 @@ function getItem(
   } as MenuItem;
 }
 
-const baseItems: MenuItem[] = [
-  getItem('工作项', '/work-items', <CalendarOutlined style={{ color: '#ff9c6e' }} />),
-  getItem('软件建模', '/rms', <DesktopOutlined style={{ color: '#b37feb' }} />),
-  getItem('代码', '/code', <CodeOutlined style={{ color: '#597ef7' }} />),
-  getItem('持续交付', '/delivery', <RocketOutlined style={{ color: '#36cfc9' }} />),
-  getItem('制品仓库', '/artifacts', <DatabaseOutlined style={{ color: '#ffc53d' }} />),
-  getItem('测试', '/test', <ExperimentOutlined style={{ color: '#95de64' }} />),
-  getItem('知识库', '/wiki', <BookOutlined style={{ color: '#ff85c0' }} />),
-  getItem('设置', '/settings', <SettingOutlined style={{ color: '#ff7875' }} />),
-];
-
 const App: React.FC = () => {
   const {
-    token: { colorBgContainer, borderRadiusLG },
+    token: { colorBgContainer },
   } = theme.useToken();
   const navigate = useNavigate();
   const location = useLocation();
@@ -81,7 +69,6 @@ const App: React.FC = () => {
     const saved = localStorage.getItem('ginger_layout_config');
     if (saved) {
       const parsed = JSON.parse(saved);
-      // 兼容旧配置：如果检测到旧的 ID，强制转为新的
       if (parsed.id === 'leftRight') return DEFAULT_LAYOUT_CONFIG;
       return parsed;
     }
@@ -90,11 +77,11 @@ const App: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
 
-  // 获取当前项目信息
+  // 从路径中精准提取项目 ID (支持 /rms/1, /code/1 等格式)
   const currentProjectId = useMemo(() => {
-    const searchParams = new URLSearchParams(location.search);
-    return searchParams.get('projectId') || localStorage.getItem('current_project_id');
-  }, [location.search]);
+    const match = location.pathname.match(/\/(rms|work-items|code|delivery|artifacts|test|wiki|settings)\/(\d+)/);
+    return match ? match[2] : localStorage.getItem('current_project_id');
+  }, [location.pathname]);
 
   const currentProjectName = useMemo(() => {
     const project = projects.find(p => p.id.toString() === currentProjectId);
@@ -118,13 +105,11 @@ const App: React.FC = () => {
   }, []);
 
   const isHomePage = location.pathname === '/' || location.pathname === '';
-
-  // 3. 计算布局配置 (首页隐藏侧边栏，非首页响应折叠状态)
+  
+  // 3. 计算布局配置
   const currentConfig = useMemo(() => {
     let baseConfig = isMobile ? { ...COMMON_LAYOUT_CONFIG, id: 'horizontal-mobile' } : userPreferredConfig;
     const isHorizontal = baseConfig.id.startsWith('horizontal');
-
-    // 如果是纵向布局，应用折叠宽度
     const sidebarWidth = isHorizontal ? 60 : (collapsed ? 64 : 240);
 
     return {
@@ -136,7 +121,8 @@ const App: React.FC = () => {
           width: sidebarWidth
         },
         hidden: isHomePage ? true : baseConfig.sidebar.hidden
-      }
+      },
+      footer: { hidden: true }
     };
   }, [isMobile, userPreferredConfig, collapsed, isHomePage]);
 
@@ -154,12 +140,29 @@ const App: React.FC = () => {
     }
   };
 
-  const handleProjectSwitch = (id: number) => {
-    localStorage.setItem('current_project_id', id.toString());
-    navigate(`${location.pathname}?projectId=${id}`);
+  // 切换项目逻辑：保留当前模块，只替换 ID (例如 /rms/1 -> /rms/2)
+  const handleProjectSwitch = (newId: number) => {
+    localStorage.setItem('current_project_id', newId.toString());
+    const pathParts = location.pathname.split('/');
+    if (pathParts.length >= 3) {
+      pathParts[2] = newId.toString();
+      navigate(pathParts.join('/'));
+    } else {
+      navigate(`/rms/${newId}`);
+    }
   };
 
-  // 4. 菜单项定义
+  // 4. 菜单项定义 (动态包含项目 ID)
+  const sideMenuItems: MenuItem[] = useMemo(() => {
+    if (isHomePage) return [];
+    const pid = currentProjectId;
+    return [
+      getItem('需求管理', `/rms/${pid}/backlog`, <DesktopOutlined style={{ color: '#b37feb' }} />),
+      getItem('设置', `/settings/${pid}`, <SettingOutlined style={{ color: '#ff7875' }} />),
+    ];
+  }, [isHomePage, currentProjectId]);
+
+
   const projectMenuItems: MenuProps['items'] = projects.map(p => ({
     key: p.id,
     label: p.name,
@@ -170,20 +173,8 @@ const App: React.FC = () => {
   const userMenuItems: MenuProps['items'] = [
     { key: 'home', label: '返回项目大盘', icon: <HomeOutlined />, onClick: () => navigate('/') },
     { type: 'divider' },
-    {
-      key: 'vertical',
-      label: '纵向布局模式',
-      icon: <AppstoreOutlined />,
-      disabled: isMobile,
-      onClick: () => setUserPreferredConfig(DEFAULT_LAYOUT_CONFIG),
-    },
-    {
-      key: 'horizontal',
-      label: '横向布局模式',
-      icon: <LayoutOutlined />,
-      disabled: isMobile,
-      onClick: () => setUserPreferredConfig(COMMON_LAYOUT_CONFIG),
-    },
+    { key: 'vertical', label: '纵向布局模式', icon: <AppstoreOutlined />, onClick: () => setUserPreferredConfig(DEFAULT_LAYOUT_CONFIG) },
+    { key: 'horizontal', label: '横向布局模式', icon: <LayoutOutlined />, onClick: () => setUserPreferredConfig(COMMON_LAYOUT_CONFIG) },
     { type: 'divider' },
     { key: 'logout', label: '退出登录', icon: <LogoutOutlined />, danger: true, onClick: handleLogout },
   ];
@@ -196,18 +187,17 @@ const App: React.FC = () => {
         <micro-app
           name="rms-app"
           url="http://localhost:5174/"
-          baseroute="/rms"
+          baseroute="/rms" // 重要：子应用将基于 /rms 解析其内部路由
           iframe
           router-mode="native"
           data={{ projectId: currentProjectId }}
         ></micro-app>
       );
     }
-    return <div style={{ padding: 40, textAlign: 'center' }}>这里是 {baseItems.find(i => i?.key === location.pathname)?.label || '该模块'} 的占位页面</div>;
+    return <div style={{ padding: 40, textAlign: 'center' }}>这里是模块 {location.pathname} 的占位页面</div>;
   };
 
   const isHorizontal = currentConfig.id.startsWith('horizontal');
-  const sideMenuItems = isHomePage ? [] : baseItems;
 
   return (
     <GingerLayout
@@ -271,11 +261,10 @@ const App: React.FC = () => {
               selectedKeys={[location.pathname]}
               mode="inline"
               inlineCollapsed={collapsed}
-              items={isHorizontal ? sideMenuItems.map(i => ({ ...i, label: '' })) : sideMenuItems}
+              items={isHorizontal ? sideMenuItems.map(i => ({...i, label: ''})) : sideMenuItems}
               onClick={({ key }) => navigate(key)}
               style={{ flex: 1, paddingTop: 8, borderRight: 0 }}
             />
-
             {!isHorizontal && !isMobile && (
               <div style={{ height: 48, borderTop: '1px solid #f5f5f5', display: 'flex', alignItems: 'center', justifyContent: collapsed ? 'center' : 'flex-end', padding: collapsed ? 0 : '0 16px' }}>
                 <Button type="text" icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />} onClick={() => setCollapsed(!collapsed)} style={{ fontSize: '16px', color: 'rgba(0,0,0,0.45)' }} />
@@ -284,15 +273,8 @@ const App: React.FC = () => {
           </div>
         </GingerSidebar>
       }
-      footer={
-        <GingerFooter>
-          <div style={{ textAlign: 'center', padding: '20px 0', color: 'rgba(0,0,0,0.25)' }}>
-            RMS ©{new Date().getFullYear()} Created by GingerLayout
-          </div>
-        </GingerFooter>
-      }
     >
-      <div style={{ minHeight: '100%', background: isHomePage ? 'transparent' : colorBgContainer, borderRadius: isMobile ? 0 : 8, padding: 0, boxShadow: isHomePage ? 'none' : '0 1px 2px rgba(0,0,0,0.03)' }}>
+      <div style={{ height: '100%', background: isHomePage ? 'transparent' : colorBgContainer, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         {renderContent()}
       </div>
     </GingerLayout>

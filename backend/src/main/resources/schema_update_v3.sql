@@ -1,0 +1,8 @@
+-- 升级迭代表结构
+ALTER TABLE iteration 
+ADD COLUMN IF NOT EXISTS owner_id INTEGER REFERENCES users(id),
+ADD COLUMN IF NOT EXISTS capacity DECIMAL(10,2) DEFAULT 0, -- 工时容量
+ADD COLUMN IF NOT EXISTS total_workload DECIMAL(10,2) DEFAULT 0, -- 当前工时总量
+ADD COLUMN IF NOT EXISTS total_task_count INTEGER DEFAULT 0, -- 总工作量数量
+ADD COLUMN IF NOT EXISTS completed_task_count INTEGER DEFAULT 0, -- 已完成工作量
+ADD COLUMN IF NOT EXISTS is_locked BOOLEAN DEFAULT FALSE; -- 是否已锁定
