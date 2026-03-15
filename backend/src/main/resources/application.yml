@@ -2,9 +2,9 @@ spring:
   application:
     name: rms-backend
   datasource:
-    url: jdbc:postgresql://localhost:5432/rms_db
-    username: postgres
-    password: ${DB_PASSWORD:password}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/rms_db}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:password}
     driver-class-name: org.postgresql.Driver
   security:
     user:
@@ -26,3 +26,11 @@ springdoc:
 
 server:
   port: 8080
+  # 关键修复：让 Spring Boot 信任 Nginx 传来的 X-Forwarded-* 头，防止路径匹配失效
+  forward-headers-strategy: framework
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+    org.springframework.web: DEBUG
+
