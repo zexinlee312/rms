@@ -4,12 +4,6 @@ import {
   LogoutOutlined,
   LayoutOutlined,
   AppstoreOutlined,
-  CalendarOutlined,
-  CodeOutlined,
-  RocketOutlined,
-  DatabaseOutlined,
-  ExperimentOutlined,
-  BookOutlined,
   SettingOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -19,7 +13,7 @@ import {
   ProjectOutlined,
 } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
-import { Menu, theme, Avatar, Space, Dropdown, Button, Typography, Tooltip } from 'antd';
+import { Menu, theme, Avatar, Space, Dropdown, Button, Typography } from 'antd';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   GingerLayout,
@@ -28,9 +22,9 @@ import {
   GingerSidebar,
   DEFAULT_LAYOUT_CONFIG,
   COMMON_LAYOUT_CONFIG,
-  GingerLayoutConfig,
   useScreenQuery
 } from '@rms/layout';
+import type { GingerLayoutConfig } from '@rms/layout';
 import Dashboard from './Dashboard';
 
 const { Text } = Typography;

@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
 import { Layout } from 'antd';
 import classNames from 'classnames';
-import { GingerLayoutConfig, DEFAULT_LAYOUT_CONFIG, GingerLayoutContext } from './interface';
-import { useScreenQuery } from './useScreenQuery';
+import { DEFAULT_LAYOUT_CONFIG, GingerLayoutContext } from './interface';
+import type { GingerLayoutConfig } from './interface';
 import './GingerLayout.scss';
 
 const { Header, Content, Footer, Sider } = Layout;
