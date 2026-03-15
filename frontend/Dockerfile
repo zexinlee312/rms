@@ -11,9 +11,6 @@ COPY . .
 # 安装依赖
 RUN pnpm install --no-frozen-lockfile
 
-# 关键：动态替换微前端地址，并确保替换的是整个 url 属性
-RUN sed -i 's|url="http://localhost:5174/"|url="/rms-app-service/"|g' base-app/src/App.tsx
-
 # 执行构建 (明确指定 --mode production)
 RUN pnpm -r run build --mode production
 

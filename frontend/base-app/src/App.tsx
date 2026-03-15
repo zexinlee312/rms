@@ -176,11 +176,18 @@ const App: React.FC = () => {
   const renderContent = () => {
     if (isHomePage) return <Dashboard />;
     if (location.pathname.startsWith('/rms')) {
+      // 动态确定子应用的 URL。
+      // 在生产环境中，直接给一个以斜杠结尾的同源绝对路径，
+      // 防止 micro-app 框架拼接不完整的 url 而导致浏览器 301 重定向。
+      const microAppUrl = import.meta.env.MODE === 'production' 
+        ? '/rms-app-service/' 
+        : 'http://localhost:5174/';
+
       return (
         // @ts-ignore
         <micro-app
           name="rms-app"
-          url="http://localhost:5174/"
+          url={microAppUrl}
           baseroute="/rms" // 重要：子应用将基于 /rms 解析其内部路由
           iframe
           router-mode="native"
