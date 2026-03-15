@@ -24,7 +24,7 @@ public class SecurityConfig {
     @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    // 1. 注册最高优先级的 CORS 过滤器，确保在 Spring Security 之前执行
+    // 1. 注册最高优先级的 CORS 过滤器,确保在 Spring Security 之前执行
     @Bean
     @Order(Ordered.HIGHEST_PRECEDENCE)
     public CorsFilter corsFilter() {
@@ -45,7 +45,7 @@ public class SecurityConfig {
         http
             // 禁用 CSRF
             .csrf(csrf -> csrf.disable())
-            // 移除默认的 X-Frame-Options 限制，允许 iframe (微前端必须)
+            // 移除默认的 X-Frame-Options 限制,允许 iframe (微前端必须)
             .headers(headers -> headers.frameOptions(frame -> frame.disable()))
             .authorizeHttpRequests(auth -> auth
                 // 显式放行所有 OPTIONS 预检请求
@@ -56,6 +56,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/**").permitAll()
                 // 放行 Swagger 和文档
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                // **关键修复：放行 Spring Boot 默认的错误处理端点，防止真实异常被 403 掩盖**
+                .requestMatchers("/error").permitAll()
                 // 其他任何请求都需要认证
                 .anyRequest().authenticated()
             )
